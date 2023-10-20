@@ -30,7 +30,7 @@ all_list = {
     'estimate_overall_growth_next_five_years': [],
 }
 
-for symbol in symbols[:3]:
+for symbol in symbols:
     try:
         url = f'https://finance.yahoo.com/quote/{symbol}/analysis?p={symbol}'
         html_content = requests.get(url, headers=headers).text
@@ -63,7 +63,7 @@ for symbol in symbols[:3]:
         print(f"{symbol} no data")
 
 data_dict = {
-    'symbol': symbols[:3],  
+    'symbol': symbols,  
     **all_list,  
 }
 
