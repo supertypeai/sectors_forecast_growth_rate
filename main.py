@@ -129,8 +129,7 @@ percentage_columns = ['estimate_overall_growth_current_year', 'estimate_overall_
 for percentage_column in percentage_columns:
   growth_forecast_df[str(percentage_column)] = growth_forecast_df[str(percentage_column)].apply(preprocess_percentage_value)
 
-final_df = growth_forecast_df[['symbol','sub_sector_id','estimate_overall_growth_current_year','estimate_overall_growth_next_year','estimate_overall_growth_next_five_years','estimate_growth_earnings_current_year',	'estimate_growth_earnings_next_year','estimate_growth_revenue_current_year','estimate_growth_revenue_next_year']]
-final_df.columns = ['symbol','sub_sector_id','overall_growth_current_year_f','overall_growth_next_year_f','overall_growth_next_five_years_f','eps_growth_current_year_f',	'eps_growth_next_year_f','revenue_growth_current_year_f','revenue_growth_next_year_f']
-
+final_df = growth_forecast_df[['symbol','sub_sector_id','estimate_overall_growth_current_year','estimate_overall_growth_next_year','estimate_overall_growth_next_five_years','avg_estimate_earnings_current_year','avg_estimate_earnings_next_year','estimate_growth_earnings_current_year','estimate_growth_earnings_next_year','avg_estimate_revenue_current_year','avg_estimate_revenue_next_year','estimate_growth_revenue_current_year','estimate_growth_revenue_next_year']]
+final_df.columns = ['symbol','sub_sector_id','overall_growth_current_year_f','overall_growth_next_year_f','overall_growth_next_five_years_f','avg_eps_current_year','avg_eps_next_year','eps_growth_current_year_f','eps_growth_next_year_f','avg_revenue_current_year','avg_revenue_next_year','revenue_growth_current_year_f','revenue_growth_next_year_f']
 final_df.to_csv('idx_company_growth_forecast.csv',index = False)
 supabase.table("idx_company_growth_forecast").upsert(final_df.to_dict(orient='records'), returning='minimal')
