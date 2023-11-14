@@ -79,7 +79,6 @@ growth_forecast_df = df.merge(f_df, on='symbol', how='inner').merge(key_df, on='
 def preprocess_numeric_value(value):
     if pd.isna(value) or value == 0.0:
         return np.nan
-    value = str(value).strip().replace(',', '') 
     if 'T' in value.upper():
         return float(value.upper().replace('T', '')) * 1e12
     elif 'B' in value.upper():
