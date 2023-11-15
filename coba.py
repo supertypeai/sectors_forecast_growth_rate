@@ -123,7 +123,7 @@ for column in numeric_columns:
 
 percentage_columns = ['estimate_overall_growth_current_year', 'estimate_overall_growth_next_year',	'estimate_overall_growth_next_five_years']
 for percentage_column in percentage_columns:
-  growth_forecast_df[str(percentage_column)] = growth_forecast_df[str(percentage_column)].apply(preprocess_percentage_value)
+  df[str(percentage_column)] = df[str(percentage_column)].apply(preprocess_percentage_value)
 
 df['multiplier'] = 1
 df_1000 = df.copy()
