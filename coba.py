@@ -9,17 +9,32 @@ import requests
 from datetime import datetime
 from io import StringIO
 
+# def preprocess_numeric_value(value):
+#     if pd.isna(value) or value == 0.0:
+#         return np.nan
+#     if 'T' in value.upper():
+#         return float(value.upper().replace('T', '')) * 1e12
+#     elif 'B' in value.upper():
+#         return float(value.upper().replace('B', '')) * 1e9
+#     elif 'M' in value.upper():
+#         return float(value.upper().replace('M', '')) * 1e6
+#     elif 'K' in value.upper():
+#         return float(value.upper().replace('K', '')) * 1e3
+#     else:
+#         return float(value)
+
 def preprocess_numeric_value(value):
     if pd.isna(value) or value == 0.0:
         return np.nan
-    if 'T' in value.upper():
-        return float(value.upper().replace('T', '')) * 1e12
-    elif 'B' in value.upper():
-        return float(value.upper().replace('B', '')) * 1e9
-    elif 'M' in value.upper():
-        return float(value.upper().replace('M', '')) * 1e6
-    elif 'K' in value.upper():
-        return float(value.upper().replace('K', '')) * 1e3
+    str_value = str(value)
+    if 'T' in str_value.upper():
+        return float(str_value.upper().replace('T', '')) * 1e12
+    elif 'B' in str_value.upper():
+        return float(str_value.upper().replace('B', '')) * 1e9
+    elif 'M' in str_value.upper():
+        return float(str_value.upper().replace('M', '')) * 1e6
+    elif 'K' in str_value.upper():
+        return float(str_value.upper().replace('K', '')) * 1e3
     else:
         return float(value)
 
