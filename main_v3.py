@@ -65,7 +65,7 @@ all_list = {
 
 years = []
 
-for symbol in symbols[:1]:
+for symbol in symbols:
     try:
         url = f'https://finance.yahoo.com/quote/{symbol}/analysis?p={symbol}'
         html_content = requests.get(url, headers=headers).text
@@ -106,7 +106,7 @@ for symbol in symbols[:1]:
         print(f"{symbol} no data")
 
 data_dict = {
-    'symbol': symbols[:1],  
+    'symbol': symbols,  
     **all_list,  
 }
 
@@ -132,7 +132,6 @@ clean_estimation_df = pd.concat([df, df_1000], axis=0, ignore_index=True)
 clean_estimation_df = clean_estimation_df.sort_values(by=["symbol", "multiplier"])
 clean_estimation_df['ratio_mult'] = clean_estimation_df['total_revenue']/ clean_estimation_df['revenue_year_ago']
 clean_estimation_df = clean_estimation_df.query("ratio_mult > 0.5 and ratio_mult < 2")
-print(clean_estimation_df)
 
 # Reshape the DataFrame
 clean_estimation_df['avg_estimate_revenue_current_year'] = clean_estimation_df['avg_estimate_revenue_current_year']*clean_estimation_df['multiplier']
