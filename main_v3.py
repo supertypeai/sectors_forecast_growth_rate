@@ -65,7 +65,7 @@ all_list = {
 
 years = []
 
-for symbol in symbols:
+for symbol in symbols[:1]:
     try:
         url = f'https://finance.yahoo.com/quote/{symbol}/analysis?p={symbol}'
         html_content = requests.get(url, headers=headers).text
@@ -106,7 +106,7 @@ for symbol in symbols:
         print(f"{symbol} no data")
 
 data_dict = {
-    'symbol': symbols,  
+    'symbol': symbols[:1],  
     **all_list,  
 }
 
@@ -132,8 +132,11 @@ clean_estimation_df = pd.concat([df, df_1000], axis=0, ignore_index=True)
 clean_estimation_df = clean_estimation_df.sort_values(by=["symbol", "multiplier"])
 clean_estimation_df['ratio_mult'] = clean_estimation_df['total_revenue']/ clean_estimation_df['revenue_year_ago']
 clean_estimation_df = clean_estimation_df.query("ratio_mult > 0.5 and ratio_mult < 2")
+print(clean_estimation_df)
 
 # Reshape the DataFrame
+clean_estimation_df['avg_estimate_revenue_current_year'] = clean_estimation_df['avg_estimate_revenue_current_year']*clean_estimation_df['multiplier']
+clean_estimation_df['avg_estimate_revenue_next_year'] = clean_estimation_df['avg_estimate_revenue_next_year']*clean_estimation_df['multiplier']
 clean_estimation_df = clean_estimation_df.drop(['revenue_year_ago','total_revenue','basic_eps','multiplier','ratio_mult'], axis = 1)
 clean_estimation_df = pd.melt(clean_estimation_df, id_vars=['symbol', 'sub_sector_id'], var_name='column', value_name='value')
 clean_estimation_df['year'] = clean_estimation_df['column'].apply(lambda x: years[0] if 'current_year' in x else years[1])
@@ -145,7 +148,7 @@ clean_estimation_df = clean_estimation_df.pivot_table(index=['symbol', 'year', '
 clean_estimation_df.columns.name = None 
 clean_estimation_df = clean_estimation_df.rename(columns={'earnings': 'eps_estimate', 'revenue': 'revenue_estimate'})
 
-# Change columns to dtypes
+# # Change columns to dtypes
 clean_estimation_df['eps_estimate'] = clean_estimation_df['eps_estimate'].astype('float32')
 clean_estimation_df['revenue_estimate'] = clean_estimation_df['revenue_estimate'].astype('float64')
 
@@ -160,7 +163,8 @@ def convert_df_to_records(df):
     records = temp_df.to_dict("records")
     return records
 
-clean_estimation_df["sub_sector_id"] = clean_estimation_df["sub_sector_id"].astype(int)
+# clean_estimation_df["sub_sector_id"] = clean_estimation_df["sub_sector_id"].astype(int)
+clean_estimation_df = clean_estimation_df.drop(['sub_sector_id'],axis = 1)
 records = convert_df_to_records(clean_estimation_df)
 
 clean_estimation_df.to_csv('idx_company_clean_estimation.csv',index = False)
