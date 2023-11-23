@@ -35,7 +35,7 @@ def calculate_growth(row, y, type=None):
         if type == 'revenue':
             year1 = row['total_revenue']/row['multiplier']
         else:
-            year1 = row['basic_eps']
+            year1 = row['diluted_eps']
 
         if pd.isna(year1) or year1 == 0.0:
             return np.nan
@@ -114,7 +114,7 @@ forecast_df = pd.DataFrame.from_dict(data_dict)
 
 current_year = datetime.now().year
 last_year= f"{current_year-1}-12-31"
-db_data = supabase.table("idx_financials_annual").select("symbol","total_revenue","basic_eps").eq("date", last_year).execute()
+db_data = supabase.table("idx_financials_annual").select("symbol","total_revenue","diluted_eps").eq("date", last_year).execute()
 db_df = pd.DataFrame(db_data.data).sort_values(['symbol'])
 
 df = forecast_df.merge(db_df, on='symbol', how='inner').merge(key_df, on='symbol', how='inner')
@@ -136,7 +136,7 @@ clean_estimation_df = clean_estimation_df.query("ratio_mult > 0.5 and ratio_mult
 # Reshape the DataFrame
 clean_estimation_df['avg_estimate_revenue_current_year'] = clean_estimation_df['avg_estimate_revenue_current_year']*clean_estimation_df['multiplier']
 clean_estimation_df['avg_estimate_revenue_next_year'] = clean_estimation_df['avg_estimate_revenue_next_year']*clean_estimation_df['multiplier']
-clean_estimation_df = clean_estimation_df.drop(['revenue_year_ago','total_revenue','basic_eps','multiplier','ratio_mult'], axis = 1)
+clean_estimation_df = clean_estimation_df.drop(['revenue_year_ago','total_revenue','diluted_eps','multiplier','ratio_mult'], axis = 1)
 clean_estimation_df = pd.melt(clean_estimation_df, id_vars=['symbol', 'sub_sector_id'], var_name='column', value_name='value')
 clean_estimation_df['year'] = clean_estimation_df['column'].apply(lambda x: years[0] if 'current_year' in x else years[1])
 clean_estimation_df['metric_type'] =  clean_estimation_df['column'].str.split('_').str[2]
