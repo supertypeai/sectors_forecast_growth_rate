@@ -8,6 +8,8 @@ import pandas as pd
 import requests
 from datetime import datetime
 from io import StringIO
+import requests
+from bs4 import BeautifulSoup
 
 
 url = os.environ.get("SUPABASE_URL")
@@ -15,6 +17,22 @@ key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
 def get_avg_inflation_rate():
+    year2 = datetime.now().year - 1
+    url = f'https://www.inflationtool.com/indonesian-rupiah?amount=100&year1=2019&year2={year2}&frequency=yearly'
+
+    # Send a GET request to the URL
+    response = requests.get(url)
+
+    # Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.content, 'html.parser')
+        cell_value = soup.select_one("html > body > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > table tbody tr:nth-of-type(2) td:nth-of-type(2)")
+
+        value = cell_value.get_text(strip=True) if cell_value else None
+        avg_inflation_rate = float(value.strip('%')) / 100
+
+    else:
+        avg_inflation_rate = 0.0278
     return avg_inflation_rate 
 
 def get_supabase_data():
@@ -47,7 +65,7 @@ def get_supabase_data():
 
     current_year = datetime.now().year
     last_year= f"{current_year-1}-12-31"
-    fa_data = supabase.table("idx_financials_annual").select("symbol","basic_eps","share_issued").eq("date", last_year).execute()
+    fa_data = supabase.table("idx_financials_annual_2").select("symbol","diluted_eps","diluted_shares_outstanding").eq("date", last_year).execute()
     fa_df = pd.DataFrame(fa_data.data).sort_values(['symbol'])
     comp_fa_df = pd.merge(company_report_df, fa_df, on='symbol', how='left')
 
@@ -67,10 +85,11 @@ def calculate_avg_cae(net_income_list):
 
     # CAE: Cyclically Adjusted Earning
 
-    # avg_inflation_rate = get_avg_inflation_rate()
-    # cae = [price * (1 + float(avg_inflation_rate)) ** (len(net_income_list) - i - 1) for i, price in enumerate(net_income_list)]
+    avg_inflation_rate = get_avg_inflation_rate()
+    cae = [price * (1 + float(avg_inflation_rate)) ** (len(net_income_list) - i - 1) for i, price in enumerate(net_income_list)]
 
-    cae = [price * (1 + 0.0278) ** (len(net_income_list) - i - 1) for i, price in enumerate(net_income_list)]
+    # cae = [price * (1 + 0.0278) ** (len(net_income_list) - i - 1) for i, price in enumerate(net_income_list)]
+    
     avg_cae = np.median(cae)
     return avg_cae
 
@@ -188,7 +207,7 @@ data['ticker_earning_predictability'] = data.apply(calculate_correlation, axis=1
 
 data['discount_rate'] = data.apply(calculate_discount_rate, axis=1)
 data['cae_per_share'] = data['avg_cae']/data['share_issued']
-data['avg_eps'] = np.mean([data['cae_per_share'], data['basic_eps']], axis=0)
+data['avg_eps'] = np.mean([data['cae_per_share'], data['diluted_eps']], axis=0)
 data['intrinsic_value'] = data.apply(calculate_intrinsic_value, axis=1)
 
 data = data[['symbol','intrinsic_value']]
