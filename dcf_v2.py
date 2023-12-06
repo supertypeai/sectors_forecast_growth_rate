@@ -101,7 +101,7 @@ def get_supabase_data():
     data['sub_sector_pb_ttm'] = data['slug'].map(sub_sector_pb.get)
     data['sub_sector_ps_ttm'] = data['slug'].map(sub_sector_ps.get)
 
-    data = data.dropna().drop(['slug','qualified_ticker','historical_financials','sub_sector'], axis=1)
+    data = data.dropna().drop(['qualified_ticker','historical_financials','sub_sector'], axis=1)
 
     return data
 
@@ -119,7 +119,7 @@ def calculate_avg_cae(net_income_list):
 
 def calculate_der(row):
 
-    if row['sub_sector_id'] == 19:
+    if row['slug'] == 'banks':
         try:
             der = row['ticker_total_liabilities']/row['ticker_total_equity']
         except:
