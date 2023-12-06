@@ -231,27 +231,27 @@ data = get_supabase_data()
 
 # data = pd.read_csv('dcf_valuation_data_new.csv')
 
-# data['avg_cae'] = data['ticker_net_income'].apply(calculate_avg_cae)
-# print("Done calculate average cae")
-# data['sub_sector_roe'] = data['sub_sector_pb_ttm']/data['sub_sector_pe_ttm']
-# data['sub_sector_npm'] = data['sub_sector_ps_ttm']/data['sub_sector_pe_ttm']
-# data['ticker_roe'] = data['ticker_pb_ttm']/data['ticker_pe_ttm']
-# data['ticker_npm'] = data['ticker_ps_ttm']/data['ticker_pe_ttm']
-# data['ticker_der'] = data.apply(calculate_der, axis=1)
-# data['ticker_profit_margin_stability'] = data.apply(calculate_profit_margin_stability, axis=1)
-# print("Done calculate profit margin stability")
-# data['ticker_earning_predictability'] = data.apply(calculate_correlation, axis=1)
-# print("Done calculate correlation")
+data['avg_cae'] = data['ticker_net_income'].apply(calculate_avg_cae)
+print("Done calculate average cae")
+data['sub_sector_roe'] = data['sub_sector_pb_ttm']/data['sub_sector_pe_ttm']
+data['sub_sector_npm'] = data['sub_sector_ps_ttm']/data['sub_sector_pe_ttm']
+data['ticker_roe'] = data['ticker_pb_ttm']/data['ticker_pe_ttm']
+data['ticker_npm'] = data['ticker_ps_ttm']/data['ticker_pe_ttm']
+data['ticker_der'] = data.apply(calculate_der, axis=1)
+data['ticker_profit_margin_stability'] = data.apply(calculate_profit_margin_stability, axis=1)
+print("Done calculate profit margin stability")
+data['ticker_earning_predictability'] = data.apply(calculate_correlation, axis=1)
+print("Done calculate correlation")
 
-# data['discount_rate'] = data.apply(calculate_discount_rate, axis=1)
-# print("Done calculate discount rate")
-# data['cae_per_share'] = data['avg_cae']/data['share_issued']
-# data['avg_eps'] = np.mean([data['cae_per_share'], data['diluted_eps']], axis=0)
-# data['intrinsic_value'] = data.apply(calculate_intrinsic_value, axis=1)
-# print("Done calculate intrinsic value")
+data['discount_rate'] = data.apply(calculate_discount_rate, axis=1)
+print("Done calculate discount rate")
+data['cae_per_share'] = data['avg_cae']/data['share_issued']
+data['avg_eps'] = np.mean([data['cae_per_share'], data['diluted_eps']], axis=0)
+data['intrinsic_value'] = data.apply(calculate_intrinsic_value, axis=1)
+print("Done calculate intrinsic value")
 
-# data = data[['symbol','intrinsic_value']]
-# data = data[data['intrinsic_value'] > 0]
+data = data[['symbol','intrinsic_value']]
+data = data[data['intrinsic_value'] > 0]
 
 
-data.to_csv('dcf_valuation_data_new_2.csv', index = False)
+data.to_csv('dcf_valuation_data_new_result.csv', index = False)
