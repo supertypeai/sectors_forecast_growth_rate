@@ -52,22 +52,31 @@ def get_supabase_data():
     company_sub_sector_df = pd.DataFrame(company_sub_sector_data.data).sort_values(['symbol'])
     company_sub_sector_df.dropna(inplace = True)
 
-    def filter_rows(row):
-        status = False
+    def filter_rows(rows):
+        if len(rows) >= 4:
+            if all('earnings' in row and 'revenue' in row and row['earnings'] is not None and row['revenue'] is not None for row in rows):
+                max_year_dict = max(rows, key=lambda x: x['year'])
+                if max_year_dict['earnings'] > 0 and max_year_dict['revenue'] > 0:
+                    return True
 
-        if len(row) >= 4:
-            max_year_dict = max(row, key=lambda x: x['year'])
-            earnings_condition = max_year_dict.get('earnings', 0) is not None and max_year_dict['earnings'] > 0
-            if earnings_condition:
-                status = True
-
-        return status
+        return False
 
     company_sub_sector_df['qualified_ticker'] = company_sub_sector_df['historical_financials'].apply(filter_rows)
     company_sub_sector_df = company_sub_sector_df[company_sub_sector_df['qualified_ticker']]
 
-    company_sub_sector_df['ticker_revenue'] = company_sub_sector_df['historical_financials'].apply(lambda x: [d.get('revenue') for d in x])
-    company_sub_sector_df['ticker_net_income'] = company_sub_sector_df['historical_financials'].apply(lambda x: [d.get('earnings') for d in x])
+    def get_value_sorted_by_year(row, metrics):
+
+        sorted_year = sorted(row, key=lambda x: x.get('year', 0))
+
+        if metrics == 'revenue':
+            sorted_value = [d.get('revenue') for d in sorted_year]
+        elif metrics == 'earnings':
+            sorted_value = [d.get('earnings') for d in sorted_year]
+
+        return sorted_value
+
+    company_sub_sector_df['ticker_revenue'] = company_sub_sector_df['historical_financials'].apply(get_value_sorted_by_year, metrics = 'revenue')
+    company_sub_sector_df['ticker_net_income'] = company_sub_sector_df['historical_financials'].apply(get_value_sorted_by_year, metrics = 'earnings')
 
     company_sub_sector_slug_data = supabase.table("idx_subsector_metadata").select("sub_sector","slug").execute()
     company_sub_sector_slug_df = pd.DataFrame(company_sub_sector_slug_data.data)
@@ -222,27 +231,27 @@ data = get_supabase_data()
 
 # data = pd.read_csv('dcf_valuation_data_new.csv')
 
-data['avg_cae'] = data['ticker_net_income'].apply(calculate_avg_cae)
-print("Done calculate average cae")
-data['sub_sector_roe'] = data['sub_sector_pb_ttm']/data['sub_sector_pe_ttm']
-data['sub_sector_npm'] = data['sub_sector_ps_ttm']/data['sub_sector_pe_ttm']
-data['ticker_roe'] = data['ticker_pb_ttm']/data['ticker_pe_ttm']
-data['ticker_npm'] = data['ticker_ps_ttm']/data['ticker_pe_ttm']
-data['ticker_der'] = data.apply(calculate_der, axis=1)
-data['ticker_profit_margin_stability'] = data.apply(calculate_profit_margin_stability, axis=1)
-print("Done calculate profit margin stability")
-data['ticker_earning_predictability'] = data.apply(calculate_correlation, axis=1)
-print("Done calculate correlation")
+# data['avg_cae'] = data['ticker_net_income'].apply(calculate_avg_cae)
+# print("Done calculate average cae")
+# data['sub_sector_roe'] = data['sub_sector_pb_ttm']/data['sub_sector_pe_ttm']
+# data['sub_sector_npm'] = data['sub_sector_ps_ttm']/data['sub_sector_pe_ttm']
+# data['ticker_roe'] = data['ticker_pb_ttm']/data['ticker_pe_ttm']
+# data['ticker_npm'] = data['ticker_ps_ttm']/data['ticker_pe_ttm']
+# data['ticker_der'] = data.apply(calculate_der, axis=1)
+# data['ticker_profit_margin_stability'] = data.apply(calculate_profit_margin_stability, axis=1)
+# print("Done calculate profit margin stability")
+# data['ticker_earning_predictability'] = data.apply(calculate_correlation, axis=1)
+# print("Done calculate correlation")
 
-data['discount_rate'] = data.apply(calculate_discount_rate, axis=1)
-print("Done calculate discount rate")
-data['cae_per_share'] = data['avg_cae']/data['share_issued']
-data['avg_eps'] = np.mean([data['cae_per_share'], data['diluted_eps']], axis=0)
-data['intrinsic_value'] = data.apply(calculate_intrinsic_value, axis=1)
-print("Done calculate intrinsic value")
+# data['discount_rate'] = data.apply(calculate_discount_rate, axis=1)
+# print("Done calculate discount rate")
+# data['cae_per_share'] = data['avg_cae']/data['share_issued']
+# data['avg_eps'] = np.mean([data['cae_per_share'], data['diluted_eps']], axis=0)
+# data['intrinsic_value'] = data.apply(calculate_intrinsic_value, axis=1)
+# print("Done calculate intrinsic value")
 
-data = data[['symbol','intrinsic_value']]
-data = data[data['intrinsic_value'] > 0]
+# data = data[['symbol','intrinsic_value']]
+# data = data[data['intrinsic_value'] > 0]
 
 
-data.to_csv('dcf_valuation_data_new_result.csv', index = False)
+data.to_csv('dcf_valuation_data_new_2.csv', index = False)
