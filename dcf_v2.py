@@ -92,19 +92,24 @@ def get_supabase_data():
     
     data.rename(columns={'pe_ttm': 'ticker_pe_ttm', 'ps_ttm': 'ticker_ps_ttm', 'pb_mrq': 'ticker_pb_ttm',
                        'total_liabilities_mrq':'ticker_total_liabilities', 'total_debt_mrq':'ticker_total_debt',
-                       'total_equity_mrq':'ticker_total_equity','diluted_eps_ttm':'diluted_eps','avg_diluted_shares_ttm':'diluted_shares_outstanding'}, inplace=True)
+                       'total_equity_mrq':'ticker_total_equity','diluted_eps_ttm':'diluted_eps','avg_diluted_shares_ttm':'share_issued'}, inplace=True)
 
 
 
-    sub_sector_pe = {}
-    sub_sector_ps = {}
-    sub_sector_pb = {}
+    # sub_sector_pe = {}
+    # sub_sector_ps = {}
+    # sub_sector_pb = {}
 
-    for slug in data['slug'].unique():
-        if slug not in sub_sector_pe:
-            sub_sector_pe[slug] = get_sub_sector_metrics(slug,supabase,'pe')
-            sub_sector_pb[slug] = get_sub_sector_metrics(slug,supabase,'pb')
-            sub_sector_ps[slug] = get_sub_sector_metrics(slug,supabase,'ps')
+    # for slug in data['slug'].unique():
+    #     if slug not in sub_sector_pe:
+    #         sub_sector_pe[slug] = get_sub_sector_metrics(slug,supabase,'pe')
+    #         sub_sector_pb[slug] = get_sub_sector_metrics(slug,supabase,'pb')
+    #         sub_sector_ps[slug] = get_sub_sector_metrics(slug,supabase,'ps')
+
+
+    sub_sector_pe = {'food-beverage': 11.1501551536488, 'insurance': 12.5684928605635, 'oil-gas-coal': 5.85231518540252, 'retailing': 13.5591633033415, 'properties-real-estate': 6.92626180948951, 'heavy-constructions-civil-engineering': 4.69175394641829, 'financing-service': 11.5423255662923, 'basic-materials': 7.76517730743847, 'banks': 14.703140504808, 'logistics-deliveries': 5.23813090422765, 'industrial-goods': 8.62908334224736, 'investment-service': 19.2000916674793, 'food-staples-retailing': 8.20635310270253, 'holding-investment-companies': 3.90271150570143, 'utilities': 12.0660911514151, 'consumer-services': -4.21195022542831, 'industrial-services': 9.37185093932861, 'multi-sector-holdings': 4.30181195605829, 'transportation': 8.22466826162693, 'software-it-services': 17.6488280069416, 'automobiles-components': 8.68943202172153, 'telecommunication': 18.5176719249567, 'leisure-goods': -8.3990472519789, 'healthcare-equipment-providers': 24.2776498163957, 'media-entertainment': -4.4086484852099, 'transportation-infrastructure': 8.69710679176984, 'pharmaceuticals-health-care-research': 13.444604079168, 'apparel-luxury-goods': -1.45122721552983, 'household-goods': -11.9855247285887, 'tobacco': 12.0931245291317, 'technology-hardware-equipment': 11.7263546315586, 'nondurable-household-products': 7.51074853450305, 'alternative-energy': 4.89878617923051}
+    sub_sector_ps = {'food-beverage': 0.997706764756595, 'insurance': 1.39645797607958, 'oil-gas-coal': 1.12834299673673, 'retailing': 0.939020890104333, 'properties-real-estate': 3.86817662287977, 'heavy-constructions-civil-engineering': 0.551843434755254, 'financing-service': 4.26449449707205, 'basic-materials': 0.992307457322477, 'banks': 3.99609529947451, 'logistics-deliveries': 1.15266441550089, 'industrial-goods': 0.70657858555423, 'investment-service': 9.36515590769189, 'food-staples-retailing': 0.415439497461933, 'holding-investment-companies': 4.85153049858182, 'utilities': 5.47479091538446, 'consumer-services': 3.02672021577053, 'industrial-services': 0.859249118408251, 'multi-sector-holdings': 0.24130937762909, 'transportation': 0.710839686627081, 'software-it-services': 1.78433358150365, 'automobiles-components': 1.09000512892799, 'telecommunication': 3.56684538760314, 'leisure-goods': 74.5560179439886, 'healthcare-equipment-providers': 2.89610128818855, 'media-entertainment': 1.42380493554912, 'transportation-infrastructure': 1.45407154520909, 'pharmaceuticals-health-care-research': 0.924333096159035, 'apparel-luxury-goods': 0.385908492710368, 'household-goods': 0.531052912880812, 'tobacco': 1.14169841348594, 'technology-hardware-equipment': 0.526603042584891, 'nondurable-household-products': 1.12930738462363, 'alternative-energy': 0.741557696752679}
+    sub_sector_pb = {'food-beverage': 1.51951758878357, 'insurance': 0.806789341320386, 'oil-gas-coal': 1.11956756318037, 'retailing': 1.03571885852323, 'properties-real-estate': 0.659069386915885, 'heavy-constructions-civil-engineering': 0.69446764815337, 'financing-service': 1.01415874175785, 'basic-materials': 0.96615810604855, 'banks': 0.857962527695296, 'logistics-deliveries': 1.14638293801929, 'industrial-goods': 0.869432332032799, 'investment-service': 1.54664080696879, 'food-staples-retailing': 2.30306155052026, 'holding-investment-companies': 0.944348567596413, 'utilities': 1.07223938312599, 'consumer-services': 1.50691356647266, 'industrial-services': 1.3026824390898, 'multi-sector-holdings': 0.392294956198596, 'transportation': 0.785786426052335, 'software-it-services': 2.3304947241931, 'automobiles-components': 0.914739132513055, 'telecommunication': 1.30552012980754, 'leisure-goods': 5.69627245903621, 'healthcare-equipment-providers': 1.95441424604904, 'media-entertainment': 1.00161600538442, 'transportation-infrastructure': 1.24489675301982, 'pharmaceuticals-health-care-research': 1.3008328884552, 'apparel-luxury-goods': 0.437860677907179, 'household-goods': 0.656148775356484, 'tobacco': 1.64395122875122, 'technology-hardware-equipment': 1.86994152483832, 'nondurable-household-products': 0.726762164033495, 'alternative-energy': 0.841640396354147}
 
     data['sub_sector_pe_ttm'] = data['slug'].map(sub_sector_pe.get)
     data['sub_sector_pb_ttm'] = data['slug'].map(sub_sector_pb.get)
@@ -228,8 +233,6 @@ def calculate_intrinsic_value(row):
 
 
 data = get_supabase_data()
-
-# data = pd.read_csv('dcf_valuation_data_new.csv')
 
 data['avg_cae'] = data['ticker_net_income'].apply(calculate_avg_cae)
 print("Done calculate average cae")
