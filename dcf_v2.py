@@ -35,49 +35,73 @@ def get_avg_inflation_rate():
         avg_inflation_rate = 0.0278
     return avg_inflation_rate 
 
+def get_sub_sector_metrics(subsector_slug, supabase_client, metrics):
+    if metrics == "pb":
+        response = supabase_client.rpc("get_peers_pb", params={"p_subsector_slug": subsector_slug}).execute()
+    elif metrics == "pe":
+        response = supabase_client.rpc("get_peers_pe", params={"p_subsector_slug": subsector_slug}).execute()
+    elif metrics == "ps":
+        response = supabase_client.rpc("get_peers_ps", params={"p_subsector_slug": subsector_slug}).execute()
+
+    median_value = float(response.data[0]['median'])
+    return median_value
+
 def get_supabase_data():
-    company_report_data = supabase.table("idx_company_report").select("symbol","sub_sector","historical_valuation","historical_financials","market_cap").execute()
-    company_report_df = pd.DataFrame(company_report_data.data).sort_values(['symbol'])
-    sub_sector_id_map = {
-        "Transportation Infrastructure": 28, "Food & Beverage": 2, "Holding & Investment Companies": 21, "Leisure Goods": 12,"Software & IT Services": 30,
-        "Basic Materials": 8,"Automobiles & Components": 10,"Retailing": 14,"Investment Service": 22,"Consumer Services": 11,"Media & Entertainment": 13,
-        "Telecommunication": 6,"Technology Hardware & Equipment": 31,"Banks": 19,"Pharmaceuticals & Health Care Research": 24,"Household Goods": 1,"Tobacco": 3,
-        "Insurance": 4,"Industrial Goods": 5,"Properties & Real Estate": 7,"Apparel & Luxury Goods": 9,"Food & Staples Retailing": 15,"Nondurable Household Products": 16,
-        "Alternative Energy": 17,"Oil, Gas & Coal": 18,"Financing Service": 20,"Healthcare Equipment & Providers": 23,"Multi-sector Holdings": 26,
-        "Heavy Constructions & Civil Engineering": 27,"Industrial Services": 25,"Utilities": 29,"Logistics & Deliveries": 32,"Transportation": 33,
-    }
-    company_report_df['sub_sector_id'] = company_report_df['sub_sector'].map(sub_sector_id_map.get)
-    company_report_df.dropna(inplace = True)
 
-    company_report_df['ticker_pe_ttm'] = company_report_df['historical_valuation'].apply(lambda x: x[-1].get('pe'))
-    company_report_df['ticker_pb_ttm'] = company_report_df['historical_valuation'].apply(lambda x: x[-1].get('pb'))
-    company_report_df['ticker_ps_ttm'] = company_report_df['historical_valuation'].apply(lambda x: x[-1].get('ps'))
-    company_report_df['ticker_total_liabilities'] = company_report_df['historical_financials'].apply(lambda x: x[-1].get('total_liabilities'))
-    company_report_df['ticker_total_debt'] = company_report_df['historical_financials'].apply(lambda x: x[-1].get('total_debt'))
-    company_report_df['ticker_total_equity'] = company_report_df['historical_financials'].apply(lambda x: x[-1].get('total_equity'))
-    company_report_df['ticker_revenue'] = company_report_df['historical_financials'].apply(lambda x: [d.get('revenue') for d in x])
-    company_report_df['ticker_net_income'] = company_report_df['historical_financials'].apply(lambda x: [d.get('earnings') for d in x])
+    company_sub_sector_data = supabase.table("idx_company_report").select("symbol","historical_financials","sub_sector").execute() #market cap data is available in this table if needed
+    company_sub_sector_df = pd.DataFrame(company_sub_sector_data.data).sort_values(['symbol'])
+    company_sub_sector_df.dropna(inplace = True)
 
-    company_report_df = company_report_df[company_report_df['ticker_net_income'].apply(lambda x: len(x) >= 4)]
-    company_report_df = company_report_df.dropna().drop(['sub_sector','historical_valuation','historical_financials'], axis=1)
-    company_report_df = company_report_df[company_report_df['ticker_net_income'].apply(lambda x: x[-1] >= 0)]
+    def filter_rows(row):
+        status = False
+
+        if len(row) >= 4:
+            max_year_dict = max(row, key=lambda x: x['year'])
+            earnings_condition = max_year_dict.get('earnings', 0) is not None and max_year_dict['earnings'] > 0
+            if earnings_condition:
+                status = True
+
+        return status
+
+    company_sub_sector_df['qualified_ticker'] = company_sub_sector_df['historical_financials'].apply(filter_rows)
+    company_sub_sector_df = company_sub_sector_df[company_sub_sector_df['qualified_ticker']]
+
+    company_sub_sector_df['ticker_revenue'] = company_sub_sector_df['historical_financials'].apply(lambda x: [d.get('revenue') for d in x])
+    company_sub_sector_df['ticker_net_income'] = company_sub_sector_df['historical_financials'].apply(lambda x: [d.get('earnings') for d in x])
+
+    company_sub_sector_slug_data = supabase.table("idx_subsector_metadata").select("sub_sector","slug").execute()
+    company_sub_sector_slug_df = pd.DataFrame(company_sub_sector_slug_data.data)
+    company_report_df = pd.merge(company_sub_sector_df, company_sub_sector_slug_df, on='sub_sector', how='left')
+
+    calc_metrics_daily_data = supabase.table("idx_calc_metrics_daily").select("symbol","pe_ttm","ps_ttm","pb_mrq","market_cap").execute()
+    calc_metrics_daily_df = pd.DataFrame(calc_metrics_daily_data.data).sort_values(['symbol'])
+    calc_metrics_quarter_data = supabase.table("idx_calc_metrics_quarter").select("symbol","total_liabilities_mrq","total_debt_mrq","total_equity_mrq","diluted_eps_ttm","avg_diluted_shares_ttm").execute()
+    calc_metrics_quarter_df = pd.DataFrame(calc_metrics_quarter_data.data).sort_values(['symbol'])
+    fa_df = pd.merge(calc_metrics_daily_df, calc_metrics_quarter_df, on='symbol', how='left')
+
+    data = pd.merge(company_report_df, fa_df, on='symbol', how='left')
+    
+    data.rename(columns={'pe_ttm': 'ticker_pe_ttm', 'ps_ttm': 'ticker_ps_ttm', 'pb_ttm': 'ticker_pb_ttm',
+                       'total_liabilities_mrq':'ticker_total_liabilities', 'total_debt_mrq':'ticker_total_debt',
+                       'total_equity_mrq':'ticker_total_equity','diluted_eps_ttm':'diluted_eps','avg_diluted_shares_ttm':'diluted_shares_outstanding'}, inplace=True)
 
 
-    current_year = datetime.now().year
-    last_year= f"{current_year-1}-12-31"
-    fa_data = supabase.table("idx_financials_annual_2").select("symbol","diluted_eps","diluted_shares_outstanding").eq("date", last_year).execute()
-    fa_df = pd.DataFrame(fa_data.data).sort_values(['symbol'])
-    comp_fa_df = pd.merge(company_report_df, fa_df, on='symbol', how='left')
 
-    sub_sector_report_data = supabase.table("idx_sector_reports_calc").select("sub_sector_id","historical_valuation").execute()
-    sub_sector_report_df = pd.DataFrame(sub_sector_report_data.data)
-    data = pd.merge(comp_fa_df, sub_sector_report_df, on='sub_sector_id', how='left')
+    sub_sector_pe = {}
+    sub_sector_ps = {}
+    sub_sector_pb = {}
 
-    data['sub_sector_pe_ttm'] = data['historical_valuation'].apply(lambda x: x[-1].get('pe'))
-    data['sub_sector_pb_ttm'] = data['historical_valuation'].apply(lambda x: x[-1].get('pb'))
-    data['sub_sector_ps_ttm'] = data['historical_valuation'].apply(lambda x: x[-1].get('ps'))
+    for slug in data['slug'].unique():
+        if slug not in sub_sector_pe:
+            sub_sector_pe[slug] = get_sub_sector_metrics(slug,supabase,'pe')
+            sub_sector_pb[slug] = get_sub_sector_metrics(slug,supabase,'pb')
+            sub_sector_ps[slug] = get_sub_sector_metrics(slug,supabase,'ps')
 
-    data= data.dropna().drop(['historical_valuation'], axis=1)
+    data['sub_sector_pe_ttm'] = data['slug'].map(sub_sector_pe.get)
+    data['sub_sector_pb_ttm'] = data['slug'].map(sub_sector_pb.get)
+    data['sub_sector_ps_ttm'] = data['slug'].map(sub_sector_ps.get)
+
+    data = data.dropna().drop(['slug','qualified_ticker','historical_financials','sub_sector'], axis=1)
 
     return data
 
@@ -196,22 +220,29 @@ def calculate_intrinsic_value(row):
 
 data = get_supabase_data()
 
-# data['avg_cae'] = data['ticker_net_income'].apply(calculate_avg_cae)
-# data['sub_sector_roe'] = data['sub_sector_pb_ttm']/data['sub_sector_pe_ttm']
-# data['sub_sector_npm'] = data['sub_sector_ps_ttm']/data['sub_sector_pe_ttm']
-# data['ticker_roe'] = data['ticker_pb_ttm']/data['ticker_pe_ttm']
-# data['ticker_npm'] = data['ticker_ps_ttm']/data['ticker_pe_ttm']
-# data['ticker_der'] = data.apply(calculate_der, axis=1)
-# data['ticker_profit_margin_stability'] = data.apply(calculate_profit_margin_stability, axis=1)
-# data['ticker_earning_predictability'] = data.apply(calculate_correlation, axis=1)
+# data = pd.read_csv('dcf_valuation_data_new.csv')
 
-# data['discount_rate'] = data.apply(calculate_discount_rate, axis=1)
-# data['cae_per_share'] = data['avg_cae']/data['share_issued']
-# data['avg_eps'] = np.mean([data['cae_per_share'], data['diluted_eps']], axis=0)
-# data['intrinsic_value'] = data.apply(calculate_intrinsic_value, axis=1)
+data['avg_cae'] = data['ticker_net_income'].apply(calculate_avg_cae)
+print("Done calculate average cae")
+data['sub_sector_roe'] = data['sub_sector_pb_ttm']/data['sub_sector_pe_ttm']
+data['sub_sector_npm'] = data['sub_sector_ps_ttm']/data['sub_sector_pe_ttm']
+data['ticker_roe'] = data['ticker_pb_ttm']/data['ticker_pe_ttm']
+data['ticker_npm'] = data['ticker_ps_ttm']/data['ticker_pe_ttm']
+data['ticker_der'] = data.apply(calculate_der, axis=1)
+data['ticker_profit_margin_stability'] = data.apply(calculate_profit_margin_stability, axis=1)
+print("Done calculate profit margin stability")
+data['ticker_earning_predictability'] = data.apply(calculate_correlation, axis=1)
+print("Done calculate correlation")
 
-# data = data[['symbol','intrinsic_value']]
-# data = data[data['intrinsic_value'] > 0]
+data['discount_rate'] = data.apply(calculate_discount_rate, axis=1)
+print("Done calculate discount rate")
+data['cae_per_share'] = data['avg_cae']/data['share_issued']
+data['avg_eps'] = np.mean([data['cae_per_share'], data['diluted_eps']], axis=0)
+data['intrinsic_value'] = data.apply(calculate_intrinsic_value, axis=1)
+print("Done calculate intrinsic value")
+
+data = data[['symbol','intrinsic_value']]
+data = data[data['intrinsic_value'] > 0]
 
 
-data.to_csv('dcf_valuation_old.csv', index = False)
+data.to_csv('dcf_valuation_data_new_result.csv', index = False)

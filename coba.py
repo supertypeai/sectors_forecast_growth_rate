@@ -33,5 +33,33 @@ from bs4 import BeautifulSoup
 
 # print(avg_inflation_rate)
 
-year2 = datetime.now().year - 1
-print(year2)
+# year2 = datetime.now().year - 1
+# print(year2)
+
+
+from dotenv import load_dotenv
+load_dotenv()
+import os
+from supabase import create_client
+
+url = os.environ.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY")
+supabase = create_client(url, key)
+
+response = (supabase.rpc("get_peers_pb",params={"p_subsector_slug":"basic-materials"}).execute())
+
+
+def get_sub_sector_metrics(subsector_slug, supabase_client, metrics):
+    if metrics == "pb":
+        response = supabase_client.rpc("get_peers_pb", params={"p_subsector_slug": subsector_slug}).execute()
+    elif metrics == "pe":
+        response = supabase_client.rpc("get_peers_pe", params={"p_subsector_slug": subsector_slug}).execute()
+    elif metrics == "ps":
+        response = supabase_client.rpc("get_peers_ps", params={"p_subsector_slug": subsector_slug}).execute()
+
+    median_value = response.data[0]['median']
+    return median_value
+
+print(get_sub_sector_metrics('basic-materials',supabase,'pe'))
+print(get_sub_sector_metrics('basic-materials',supabase,'pb'))
+print(get_sub_sector_metrics('basic-materials',supabase,'ps'))

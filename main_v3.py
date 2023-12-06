@@ -28,22 +28,6 @@ def preprocess_numeric_value(value):
     else:
         return float(value)
 
-def calculate_growth(row, y, type=None):
-    try:
-        year2 = row[y]
-
-        if type == 'revenue':
-            year1 = row['total_revenue']/row['multiplier']
-        else:
-            year1 = row['diluted_eps']
-
-        if pd.isna(year1) or year1 == 0.0:
-            return np.nan
-        else:
-            return (year2 - year1) / year1
-    except (ValueError, KeyError):
-        return np.nan
-
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)

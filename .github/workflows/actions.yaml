@@ -28,7 +28,7 @@ jobs:
         env:
             SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
             SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        run: python main_v3.py
+        run: python dcf_v2.py
           
       - name: commit files
         run: |
