@@ -81,7 +81,7 @@ def get_supabase_data():
 
     data = pd.merge(company_report_df, fa_df, on='symbol', how='left')
     
-    data.rename(columns={'pe_ttm': 'ticker_pe_ttm', 'ps_ttm': 'ticker_ps_ttm', 'pb_ttm': 'ticker_pb_ttm',
+    data.rename(columns={'pe_ttm': 'ticker_pe_ttm', 'ps_ttm': 'ticker_ps_ttm', 'pb_mrq': 'ticker_pb_ttm',
                        'total_liabilities_mrq':'ticker_total_liabilities', 'total_debt_mrq':'ticker_total_debt',
                        'total_equity_mrq':'ticker_total_equity','diluted_eps_ttm':'diluted_eps','avg_diluted_shares_ttm':'diluted_shares_outstanding'}, inplace=True)
 
