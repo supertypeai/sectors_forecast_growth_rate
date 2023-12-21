@@ -1,9 +1,6 @@
-name: run main_v3.py
+name: Sectors Forecast Growth Rate
 
 on:
-  schedule:
-    - cron: '0 0 1 */3 *' 
-
   workflow_dispatch:
 
 jobs:
