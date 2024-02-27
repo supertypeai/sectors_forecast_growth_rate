@@ -100,8 +100,10 @@ current_year = datetime.now().year
 last_year= f"{current_year-1}-12-31"
 db_data = supabase.table("idx_financials_annual").select("symbol","total_revenue","diluted_eps").eq("date", last_year).execute()
 db_df = pd.DataFrame(db_data.data).sort_values(['symbol'])
+eps_data = supabase.table("idx_calc_metrics_annual").select("symbol","diluted_eps").eq("date", last_year).execute()
+eps_df = pd.DataFrame(eps_data.data).sort_values(['symbol'])
 
-df = forecast_df.merge(db_df, on='symbol', how='inner').merge(key_df, on='symbol', how='inner')
+df = forecast_df.merge(db_df, on='symbol', how='inner').merge(key_df, on='symbol', how='inner').merge(eps_df, on='symbol', how='inner')
 
 numeric_columns = ['avg_estimate_earnings_current_year', 'avg_estimate_earnings_next_year', 'avg_estimate_revenue_current_year', 'avg_estimate_revenue_next_year','revenue_year_ago']
 
@@ -150,10 +152,10 @@ def convert_df_to_records(df):
 clean_estimation_df = clean_estimation_df.drop(['sub_sector_id'],axis = 1)
 records = convert_df_to_records(clean_estimation_df)
 
-clean_estimation_df.to_csv('result/idx_company_growth_forecast.csv',index = False)
+clean_estimation_df.to_csv('result/idx_company_growth_forecast_2.csv',index = False)
 
-try:
-    supabase.table("idx_company_forecast").upsert(records, returning='minimal').execute()
-    print("Upsert operation successful.")
-except Exception as e:
-    print(f"Error during upsert operation: {e}")
+# try:
+#     supabase.table("idx_company_forecast").upsert(records, returning='minimal').execute()
+#     print("Upsert operation successful.")
+# except Exception as e:
+#     print(f"Error during upsert operation: {e}")
