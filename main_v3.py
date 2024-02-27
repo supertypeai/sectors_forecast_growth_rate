@@ -152,10 +152,10 @@ def convert_df_to_records(df):
 clean_estimation_df = clean_estimation_df.drop(['sub_sector_id'],axis = 1)
 records = convert_df_to_records(clean_estimation_df)
 
-clean_estimation_df.to_csv('result/idx_company_growth_forecast_2.csv',index = False)
+clean_estimation_df.to_csv('result/idx_company_growth_forecast.csv',index = False)
 
-# try:
-#     supabase.table("idx_company_forecast").upsert(records, returning='minimal').execute()
-#     print("Upsert operation successful.")
-# except Exception as e:
-#     print(f"Error during upsert operation: {e}")
+try:
+    supabase.table("idx_company_forecast").upsert(records, returning='minimal').execute()
+    print("Upsert operation successful.")
+except Exception as e:
+    print(f"Error during upsert operation: {e}")
