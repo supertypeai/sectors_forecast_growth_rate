@@ -98,7 +98,7 @@ forecast_df = pd.DataFrame.from_dict(data_dict)
 
 current_year = datetime.now().year
 last_year= f"{current_year-1}-12-31"
-db_data = supabase.table("idx_financials_annual").select("symbol","total_revenue","diluted_eps").eq("date", last_year).execute()
+db_data = supabase.table("idx_financials_annual").select("symbol","total_revenue").eq("date", last_year).execute()
 db_df = pd.DataFrame(db_data.data).sort_values(['symbol'])
 eps_data = supabase.table("idx_calc_metrics_annual").select("symbol","diluted_eps").eq("date", last_year).execute()
 eps_df = pd.DataFrame(eps_data.data).sort_values(['symbol'])
