@@ -4,7 +4,6 @@
 import os
 from dotenv import load_dotenv
 load_dotenv()
-import os
 from supabase import create_client
 import numpy as np
 import pandas as pd
@@ -12,6 +11,7 @@ import requests
 from datetime import datetime
 from io import StringIO
 import re
+import time
 
 def preprocess_numeric_value(value):
     if pd.isna(value) or value == 0.0:
@@ -51,19 +51,27 @@ years = []
 
 for symbol in symbols:
     try:
-        url = f'https://finance.yahoo.com/quote/{symbol}/analysis?p={symbol}'
+        # url = f'https://finance.yahoo.com/quote/{symbol}/analysis?p={symbol}'
+        url = f'https://finance.yahoo.com/quote/{symbol}/analysis'
         html_content = requests.get(url, headers=headers).text
         source_df = pd.read_html(StringIO(html_content))
+        print(source_df)
 
         earnings_df = source_df[0]
         revenue_df = source_df[1]
         overall_growth_df = source_df[5]
 
-        avg_estimate_earnings_current_year = earnings_df.loc[earnings_df['Earnings Estimate'] == 'Avg. Estimate'].iloc[:, 3].values[0]
-        avg_estimate_earnings_next_year = earnings_df.loc[earnings_df['Earnings Estimate'] == 'Avg. Estimate'].iloc[:, 4].values[0]
-        avg_estimate_revenue_current_year = revenue_df.loc[revenue_df['Revenue Estimate'] == 'Avg. Estimate'].iloc[:, 3].values[0]
-        year_ago = revenue_df.loc[revenue_df['Revenue Estimate'] == 'Year Ago Sales'].iloc[:, 3].values[0]
-        avg_estimate_revenue_next_year = revenue_df.loc[revenue_df['Revenue Estimate'] == 'Avg. Estimate'].iloc[:, 4].values[0]
+        # avg_estimate_earnings_current_year = earnings_df.loc[earnings_df['Earnings Estimate'] == 'Avg. Estimate'].iloc[:, 3].values[0]
+        # avg_estimate_earnings_next_year = earnings_df.loc[earnings_df['Earnings Estimate'] == 'Avg. Estimate'].iloc[:, 4].values[0]
+        # avg_estimate_revenue_current_year = revenue_df.loc[revenue_df['Revenue Estimate'] == 'Avg. Estimate'].iloc[:, 3].values[0]
+        # year_ago = revenue_df.loc[revenue_df['Revenue Estimate'] == 'Year Ago Sales'].iloc[:, 3].values[0]
+        # avg_estimate_revenue_next_year = revenue_df.loc[revenue_df['Revenue Estimate'] == 'Avg. Estimate'].iloc[:, 4].values[0]
+
+        avg_estimate_earnings_current_year = earnings_df.iloc[1,3]
+        avg_estimate_earnings_next_year = earnings_df.iloc[1,4]
+        avg_estimate_revenue_current_year = revenue_df.iloc[1,3]
+        avg_estimate_revenue_next_year = revenue_df.iloc[1,4]
+        year_ago = revenue_df.iloc[4,3]
 
         all_list['avg_estimate_earnings_current_year'].append(avg_estimate_earnings_current_year)
         all_list['avg_estimate_earnings_next_year'].append(avg_estimate_earnings_next_year)
@@ -88,6 +96,8 @@ for symbol in symbols:
         for key in all_list.keys():
             all_list[key].append(np.nan)
         print(f"{symbol} no data")
+    
+    time.sleep(3)
 
 data_dict = {
     'symbol': symbols,  
@@ -95,6 +105,8 @@ data_dict = {
 }
 
 forecast_df = pd.DataFrame.from_dict(data_dict)
+print(len(forecast_df))
+forecast_df.to_csv('forecast_df.csv', index = False)
 
 current_year = datetime.now().year
 last_year= f"{current_year-1}-12-31"
@@ -104,8 +116,12 @@ eps_data = supabase.table("idx_calc_metrics_annual").select("symbol","diluted_ep
 eps_df = pd.DataFrame(eps_data.data).sort_values(['symbol'])
 
 df = forecast_df.merge(db_df, on='symbol', how='inner').merge(key_df, on='symbol', how='inner').merge(eps_df, on='symbol', how='inner')
+print(df)
+print(len(df))
 
 numeric_columns = ['avg_estimate_earnings_current_year', 'avg_estimate_earnings_next_year', 'avg_estimate_revenue_current_year', 'avg_estimate_revenue_next_year','revenue_year_ago']
+
+df = df.replace("--", np.nan, regex=True)
 
 for column in numeric_columns:
     df[column] = df[column].apply(preprocess_numeric_value)
@@ -119,6 +135,7 @@ clean_estimation_df = clean_estimation_df.sort_values(by=["symbol", "multiplier"
 clean_estimation_df['ratio_mult'] = clean_estimation_df['total_revenue']/ clean_estimation_df['revenue_year_ago']
 clean_estimation_df = clean_estimation_df.query("ratio_mult > 0.5 and ratio_mult < 2")
 
+print(clean_estimation_df)
 # Reshape the DataFrame
 clean_estimation_df['avg_estimate_revenue_current_year'] = clean_estimation_df['avg_estimate_revenue_current_year']*clean_estimation_df['multiplier']
 clean_estimation_df['avg_estimate_revenue_next_year'] = clean_estimation_df['avg_estimate_revenue_next_year']*clean_estimation_df['multiplier']
@@ -129,6 +146,7 @@ clean_estimation_df['metric_type'] =  clean_estimation_df['column'].str.split('_
 
 clean_estimation_df = clean_estimation_df.pivot_table(index=['symbol', 'year', 'sub_sector_id'], columns='metric_type', values='value', aggfunc='first').reset_index()
 
+print(clean_estimation_df)
 # Rename columns
 clean_estimation_df.columns.name = None 
 clean_estimation_df = clean_estimation_df.rename(columns={'earnings': 'eps_estimate', 'revenue': 'revenue_estimate'})
@@ -152,10 +170,10 @@ def convert_df_to_records(df):
 clean_estimation_df = clean_estimation_df.drop(['sub_sector_id'],axis = 1)
 records = convert_df_to_records(clean_estimation_df)
 
-clean_estimation_df.to_csv('result/idx_company_growth_forecast.csv',index = False)
+clean_estimation_df.to_csv('result/idx_company_growth_forecast_3.csv',index = False)
 
-try:
-    supabase.table("idx_company_forecast").upsert(records, returning='minimal').execute()
-    print("Upsert operation successful.")
-except Exception as e:
-    print(f"Error during upsert operation: {e}")
+# try:
+#     supabase.table("idx_company_forecast").upsert(records, returning='minimal').execute()
+#     print("Upsert operation successful.")
+# except Exception as e:
+#     print(f"Error during upsert operation: {e}")
