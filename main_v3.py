@@ -51,8 +51,18 @@ years = []
 
 for symbol in symbols:
     try:
-        # url = f'https://finance.yahoo.com/quote/{symbol}/analysis?p={symbol}'
         url = f'https://finance.yahoo.com/quote/{symbol}/analysis'
+        with requests.Session() as session:
+            response = session.get(url, headers=headers, allow_redirects=True)
+            final_url = response.url
+            print(final_url)
+            if final_url != url:
+                print("Redirected to:", url)
+                response = session.get(url, headers=headers)
+            else:
+                html_content = requests.get(url, headers=headers).text
+                source_df = pd.read_html(StringIO(html_content))
+
         html_content = requests.get(url, headers=headers).text
         source_df = pd.read_html(StringIO(html_content))
         print(source_df)
