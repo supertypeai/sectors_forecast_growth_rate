@@ -74,7 +74,7 @@ for symbol in symbols:
       years.append(year)
 
 forecast_df = pd.DataFrame(all_growth_data)
-forecast_df.to_csv("forecast_rapid_api.csv", index = False)
+forecast_df.to_csv("forecast_rapid_api2.csv", index = False)
 
 
 # current_year = datetime.now().year
