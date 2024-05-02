@@ -25,7 +25,8 @@ jobs:
         env:
             SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
             SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        run: python main_v3.py
+            rapid_api: ${{ secrets.rapid_api }}
+        run: python main.py
           
       - name: commit files
         run: |
