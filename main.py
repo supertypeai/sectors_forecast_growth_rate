@@ -8,16 +8,16 @@ from supabase import create_client
 from dotenv import load_dotenv
 load_dotenv()
 
-url = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-analysis"
+url_rapidapi = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-analysis"
 
 headers = {
-	"X-RapidAPI-Key": os.environ.get("rapid_api"),
+	"X-RapidAPI-Key": str(os.environ.get("rapid_api")),
 	"X-RapidAPI-Host": "apidojo-yahoo-finance-v1.p.rapidapi.com"
 }
 
-url = os.environ.get("SUPABASE_URL")
+url_supabase = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
-supabase = create_client(url, key)
+supabase = create_client(url_supabase, key)
 
 # Retrieve symbols with analyst data based on the previous year
 symbols_data = supabase.table("idx_company_forecast").select("symbol").execute()
@@ -25,8 +25,9 @@ symbols = list({d['symbol'] for d in symbols_data.data})
 
 def extract_growth_data(symbol):
   querystring = {"symbol":symbol,"region":"ID"}
-  response = requests.get(url, headers=headers, params=querystring)
+  response = requests.get(url_rapidapi, headers=headers, params=querystring)
   data = response.json()
+  print(data)
 
   raw_analysis_data = data['earningsTrend']['trend']
   desired_periods = ['0y', '+1y']
@@ -64,7 +65,7 @@ def extract_growth_data(symbol):
 
 all_growth_data = []
 years = []
-for symbol in symbols:
+for symbol in symbols[:1]:
   growth, year_list = extract_growth_data(symbol)
   print(growth)
   all_growth_data.append(growth)
