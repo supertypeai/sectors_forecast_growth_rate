@@ -65,7 +65,7 @@ def extract_growth_data(symbol):
 
 all_growth_data = []
 years = []
-for symbol in symbols[:1]:
+for symbol in symbols:
   growth, year_list = extract_growth_data(symbol)
   print(growth)
   all_growth_data.append(growth)
