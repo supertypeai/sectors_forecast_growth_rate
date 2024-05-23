@@ -136,7 +136,7 @@ def convert_df_to_records(df):
 
 # clean_estimation_df["sub_sector_id"] = clean_estimation_df["sub_sector_id"].astype(int)
 clean_estimation_df = clean_estimation_df.drop(['sub_sector_id'],axis = 1)
-clean_estimation_df[["eps_estimate", "revenue_estimate"]] = clean_estimation_df[["eps_estimate", "revenue_estimate"]].astype(int)
+clean_estimation_df["revenue_estimate"] = clean_estimation_df["revenue_estimate"].astype(np.int64)
 records = convert_df_to_records(clean_estimation_df)
 
 clean_estimation_df.to_csv("forecast_rapid_api.csv", index = False)
