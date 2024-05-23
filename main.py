@@ -131,11 +131,12 @@ def convert_df_to_records(df):
             temp_df[cols] = temp_df[cols].astype(str)
     temp_df["updated_on"] = pd.Timestamp.now(tz="GMT").strftime("%Y-%m-%d %H:%M:%S")
     temp_df = temp_df.replace({np.nan: None})
-    records = temp_df.to_json()
+    records = temp_df.to_dict("records")
     return records
 
 # clean_estimation_df["sub_sector_id"] = clean_estimation_df["sub_sector_id"].astype(int)
 clean_estimation_df = clean_estimation_df.drop(['sub_sector_id'],axis = 1)
+clean_estimation_df[["eps_estimate", "revenue_estimate"]] = clean_estimation_df[["eps_estimate", "revenue_estimate"]].astype(int)
 records = convert_df_to_records(clean_estimation_df)
 
 clean_estimation_df.to_csv("forecast_rapid_api.csv", index = False)
