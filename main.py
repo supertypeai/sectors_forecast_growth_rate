@@ -84,7 +84,9 @@ print(errors)
 
 current_year = datetime.now().year
 last_year= f"{current_year-1}-12-31"
-key_df = pd.read_csv("idx_company_profile_rows.csv")
+# key_df = pd.read_csv("idx_company_profile_rows.csv")
+key_df = supabase.table("idx_company_profile").select("*").execute()
+key_df = pd.DataFrame(key_df.data)
 db_data = supabase.table("idx_financials_annual").select("symbol","total_revenue").eq("date", last_year).execute()
 db_df = pd.DataFrame(db_data.data).sort_values(['symbol'])
 eps_data = supabase.table("idx_calc_metrics_annual").select("symbol","diluted_eps").eq("date", last_year).execute()
