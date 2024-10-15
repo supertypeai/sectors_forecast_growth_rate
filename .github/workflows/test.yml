@@ -1,8 +1,6 @@
 name: test_github
 
 on:
-  schedule:
-      - cron: '5 * * * *' # run at 10th day of every month at 20:00 GMT+7
   workflow_dispatch:
 
 jobs:
