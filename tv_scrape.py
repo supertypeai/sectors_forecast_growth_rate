@@ -260,3 +260,31 @@ for i in range(0,active_stock.shape[0]):
     
     except:
         print(f"No forecast data for stock {symbol}")
+    
+df_fore.symbol = df_fore.symbol + ".JK"
+df_fore['revenue_estimate'] = df_fore.revenue_estimate.astype('int')
+df_fore["updated_on"] = pd.Timestamp.now(tz="GMT").strftime("%Y-%m-%d %H:%M:%S")
+
+def upsert_data(table,symbol, year, other_data,new_data):
+    # Check if a row with the same symbol and year exists
+    existing_entry = supabase.table(table)\
+                             .select("*")\
+                             .eq("symbol", symbol)\
+                             .eq("year", year)\
+                             .execute()
+
+    if existing_entry.data:
+        # Update the existing row if found
+        result = supabase.table(table)\
+                         .update(other_data)\
+                         .eq("symbol", symbol)\
+                         .eq("year", year)\
+                         .execute()
+        print(f"Updated: {result}")
+    else:
+        # Insert a new row if not found
+        result = supabase.table(table).insert(new_data).execute()
+        print(f"Inserted: {result}")
+
+for i in range(0, df_fore.shape[0]):
+    upsert_data("idx_company_forecast", df_fore.symbol.iloc[i],df_fore.year.iloc[i],df_fore[["revenue_estimate","eps_estimate"]].iloc[i:i+1].to_dict(orient="records"),df_fore.iloc[i:i+1].to_dict(orient="records"))
