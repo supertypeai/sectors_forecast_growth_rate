@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 import os 
 import time
 import re
+import logging
+from imp import reload
 
 from datetime import datetime
 import pandas as pd
@@ -174,6 +176,18 @@ def get_revenue(driver):
 
     return df
     
+
+def initiate_logging(LOG_FILENAME):
+    reload(logging)
+
+    formatLOG = '%(asctime)s - %(levelname)s: %(message)s'
+    logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO, format=formatLOG)
+    logging.info('Program add incomplete stock started')
+
+# Initiate logging
+LOG_FILENAME = 'scraping.log'
+initiate_logging(LOG_FILENAME)
+
 # Get supabase connection
 load_dotenv()
 url = os.environ.get("SUPABASE_URL")
@@ -286,3 +300,5 @@ def upsert_data(table,symbol, year, other_data,new_data):
 
 for i in range(0, df_fore.shape[0]):
     upsert_data("idx_company_forecast", df_fore.symbol.iloc[i],df_fore.year.iloc[i],df_fore[["revenue_estimate","eps_estimate"]].iloc[i:i+1].to_dict(orient="records"),df_fore.iloc[i:i+1].to_dict(orient="records"))
+
+logging.info(f"Finish update forecast growth data in {pd.Timestamp.now(tz="GMT").strftime("%Y-%m-%d %H:%M:%S")}")
