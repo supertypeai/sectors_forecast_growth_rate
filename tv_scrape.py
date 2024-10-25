@@ -207,8 +207,6 @@ driver.maximize_window()
 
 # Start Scraping
 df_fore = pd.DataFrame()
-
-active_stock = active_stock[active_stock.symbol.isin(['BBCA','BMRI','ICBP','TPIA','CPIN'])] #TEST ONLY
                                                       
 for i in range(0,active_stock.shape[0]):
     symbol = active_stock.symbol.iloc[i]
