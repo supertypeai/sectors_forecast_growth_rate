@@ -1,3 +1,3 @@
 # sectors_forecast_growth_rate
 
-source: yf analysis tab
+source: trading view forecast menu
