@@ -15,7 +15,7 @@ from supabase import create_client
 import pandas as pd
 from dotenv import load_dotenv
 
-from pyvirtualdisplay import Display
+# from pyvirtualdisplay import Display
 
 def clean_value(value):
     # Remove Unicode control characters using regex
@@ -201,8 +201,8 @@ active_stock = pd.DataFrame(active_stock.data)
 
 active_stock[['symbol','index']] = active_stock["symbol"].str.split('.',expand=True)
 
-display = Display(visible=0, size=(1200, 1200))  
-display.start()
+# display = Display(visible=0, size=(1200, 1200))  
+# display.start()
 
 chrome_options = webdriver.ChromeOptions()    
 # Add your options as needed    
@@ -232,25 +232,25 @@ for i in range(0,active_stock.shape[0]):
     try:
         # Scroll to eps growth section
         ## Locate the element by XPath
-        element = driver.find_element(By.XPATH, '/html/body/div[3]/div[4]/div[3]/div[2]/div/div[1]/div[1]/div[2]/div[2]/div')  # Replace with the actual XPath
+        element = driver.find_element(By.XPATH, '//*[@id="js-category-content"]/div[2]/div/div[1]/div[1]/div[2]/div[2]/div/div[2]')  # Replace with the actual XPath
 
-        ## Scroll to the element using JavaScript execution
+        # Scroll to the element using JavaScript execution
         driver.execute_script("arguments[0].scrollIntoView();", element)
 
-        ann = driver.find_element(By.XPATH, '/html/body/div[3]/div[4]/div[3]/div[2]/div/div[1]/div[2]/div/div[1]/div/div/div/button[1]')
+        ann = driver.find_element(By.XPATH, '//*[@id="FY"]')
 
         ann.click()
 
         time.sleep(5)
 
         # Scroll to Revenue Section
-        ## Locate the element by XPath
-        element = driver.find_element(By.XPATH, '/html/body/div[3]/div[4]/div[3]/div[2]/div/div[1]/div[2]')  # Replace with the actual XPath
+        # Locate the element by XPath
+        element = driver.find_element(By.XPATH, '//*[@id="js-category-content"]/div[2]/div/div[1]/div[1]/div[2]/div[2]/div/div[2]')  # Replace with the actual XPath
 
-        ## Scroll to the element using JavaScript execution
+        # Scroll to the element using JavaScript execution
         driver.execute_script("arguments[0].scrollIntoView();", element)
 
-        ann = driver.find_element(By.XPATH, '/html/body/div[3]/div[4]/div[3]/div[2]/div/div[1]/div[2]/div/div[5]/div/div/div/button[1]')
+        ann = driver.find_element(By.XPATH, '/html/body/div[3]/div[4]/div[2]/div[2]/div/div[1]/div[2]/div/div[5]/div/div/div/button[1]')
 
         ann.click()
 
