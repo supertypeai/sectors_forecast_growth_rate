@@ -301,4 +301,4 @@ def upsert_data(table,symbol, year, other_data,new_data):
 for i in range(0, df_fore.shape[0]):
     upsert_data("idx_company_forecast", df_fore.symbol.iloc[i],df_fore.year.iloc[i],df_fore[["revenue_estimate","eps_estimate"]].iloc[i:i+1].to_dict(orient="records"),df_fore.iloc[i:i+1].to_dict(orient="records"))
 
-logging.info(f"Finish update forecast growth data in {pd.Timestamp.now(tz="GMT").strftime("%Y-%m-%d %H:%M:%S")}")
+logging.info(f"Finish update forecast growth data in {pd.Timestamp.now(tz="GMT").strftime('%Y-%m-%d %H:%M:%S')}")
